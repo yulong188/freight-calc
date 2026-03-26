@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>海运费实时查询平台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== 顶部导航 ===== -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">⚓</div>
+      <div>
+        <div class="logo-title">FreightCalc</div>
+        <div class="logo-sub">海运费实时查询平台</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="#" class="nav-link active">运价查询</a>
+      <a href="#" class="nav-link">历史记录</a>
+      <a href="#" class="nav-link">港口指南</a>
+    </nav>
+    <div class="header-actions">
+      <span class="live-badge" id="modeBadge">● 实时数据</span>
+    </div>
+  </div>
+</header>
+
+<!-- ===== 主内容 ===== -->
+<main class="main">
+
+  <!-- ===== AI 智能搜索框 ===== -->
+  <section class="ai-search-section">
+    <div class="ai-search-inner">
+      <div class="ai-search-label">
+        <span class="ai-icon">✦</span> AI 智能匹配
+      </div>
+      <div class="ai-search-bar">
+        <input
+          type="text"
+          id="aiSearchInput"
+          class="ai-search-input"
+          placeholder="例如：中国到印度尼西亚  /  上海发货去美国  /  青岛到鹿特丹"
+          autocomplete="off"
+        />
+        <button class="ai-search-btn" id="aiSearchBtn" onclick="handleAiSearch()">
+          <span class="ai-btn-icon">✦</span> 智能匹配
+        </button>
+      </div>
+
+      <!-- 快捷示例 -->
+      <div class="ai-examples">
+        <span class="ai-example-label">试试：</span>
+        <button class="ai-example-chip" onclick="fillAiExample(this)">中国 → 印度尼西亚</button>
+        <button class="ai-example-chip" onclick="fillAiExample(this)">上海 → 美国西海岸</button>
+        <button class="ai-example-chip" onclick="fillAiExample(this)">青岛 → 荷兰鹿特丹</button>
+        <button class="ai-example-chip" onclick="fillAiExample(this)">深圳 → 新加坡</button>
+        <button class="ai-example-chip" onclick="fillAiExample(this)">天津 → 迪拜</button>
+      </div>
+
+      <!-- AI 匹配结果提示 -->
+      <div class="ai-result-tip" id="aiResultTip" style="display:none">
+        <div class="ai-result-inner">
+          <span class="ai-result-icon">✓</span>
+          <div class="ai-result-text" id="aiResultText"></div>
+          <button class="ai-result-apply" id="aiResultApply" onclick="applyAiMatch()">应用到表单 →</button>
+        </div>
+      </div>
+
+      <!-- AI 无结果 -->
+      <div class="ai-no-result" id="aiNoResult" style="display:none">
+        <span>❓</span> 未识别到港口信息，请尝试输入「国家名」或「城市名」
+      </div>
+    </div>
+  </section>
+
+  <!-- 查询表单 -->
+  <section class="search-section">
+    <div class="section-title">
+      <h2>填写货物信息，立即获取实时报价</h2>
+      <p>对比多家船公司运价，找到最优方案 · Powered by Freightos</p>
+    </div>
+
+    <form class="search-form" id="searchForm">
+
+      <!-- 起运港 → 目的港 -->
+      <div class="form-row route-row">
+        <div class="form-group">
+          <label>起运港 <span class="required">*</span></label>
+          <div class="port-input-wrap">
+            <span class="port-flag">🚢</span>
+            <input type="text" id="originPort" class="form-input port-input"
+              placeholder="港口名称或代码，如 上海 / CNSHA"
+              list="originPortList" required />
+            <datalist id="originPortList"></datalist>
+          </div>
+          <div class="popular-ports" id="originPopular"></div>
+        </div>
+
+        <div class="route-arrow">
+          <div class="arrow-line"></div>
+          <div class="arrow-icon">✈</div>
+          <div class="arrow-line"></div>
+        </div>
+
+        <div class="form-group">
+          <label>目的港 <span class="required">*</span></label>
+          <div class="port-input-wrap">
+            <span class="port-flag">⚓</span>
+            <input type="text" id="destPort" class="form-input port-input"
+              placeholder="港口名称或代码，如 洛杉矶 / USLAX"
+              list="destPortList" required />
+            <datalist id="destPortList"></datalist>
+          </div>
+          <div class="popular-ports" id="destPopular"></div>
+        </div>
+      </div>
+
+      <!-- 箱型 -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>箱型</label>
+          <div class="container-type-grid" id="containerTypeGrid">
+            <button type="button" class="container-btn active" data-type="20GP">
+              <span class="ct-icon">📦</span>
+              <span class="ct-name">20GP</span>
+              <span class="ct-desc">标准箱 · 33m³</span>
+            </button>
+            <button type="button" class="container-btn" data-type="40GP">
+              <span class="ct-icon">📦</span>
+              <span class="ct-name">40GP</span>
+              <span class="ct-desc">标准箱 · 67m³</span>
+            </button>
+            <button type="button" class="container-btn" data-type="40HQ">
+              <span class="ct-icon">🏗️</span>
+              <span class="ct-name">40HQ</span>
+              <span class="ct-desc">高柜 · 76m³</span>
+            </button>
+            <button type="button" class="container-btn" data-type="LCL">
+              <span class="ct-icon">📬</span>
+              <span class="ct-name">LCL</span>
+              <span class="ct-desc">拼箱散货</span>
+            </button>
+          </div>
+          <input type="hidden" id="containerType" value="20GP" />
+        </div>
+      </div>
+
+      <div class="form-row four-col">
+        <div class="form-group" id="containerCountGroup">
+          <label>箱量 <span class="required">*</span></label>
+          <div class="input-with-unit">
+            <input type="number" id="containerCount" class="form-input"
+              value="1" min="1" max="99" required />
+            <span class="unit">TEU</span>
+          </div>
+        </div>
+
+        <div class="form-group" id="weightGroup">
+          <label>货物重量</label>
+          <div class="input-with-unit">
+            <input type="number" id="weight" class="form-input"
+              placeholder="0" min="0" step="0.1" />
+            <span class="unit">KG</span>
+          </div>
+        </div>
+
+        <div class="form-group" id="volumeGroup" style="display:none">
+          <label>货物体积 <span class="required">*</span></label>
+          <div class="input-with-unit">
+            <input type="number" id="volume" class="form-input"
+              placeholder="0" min="0.1" step="0.1" />
+            <span class="unit">CBM</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>预计离港日期</label>
+          <input type="date" id="departureDate" class="form-input" />
+        </div>
+
+        <div class="form-group">
+          <label>货物类型</label>
+          <select id="cargoType" class="form-input form-select">
+            <option value="general">普通货物</option>
+            <option value="hazmat">危险品</option>
+            <option value="reefer">冷藏品</option>
+            <option value="oversize">超尺寸货</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-search" id="searchBtn">
+          <span class="btn-text">查询实时运价</span>
+          <span class="btn-icon">→</span>
+        </button>
+        <button type="button" class="btn-reset" id="resetBtn">重置</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- 结果区域 -->
+  <section class="results-section" id="resultsSection" style="display:none">
+    <div class="results-header">
+      <div class="results-summary" id="resultsSummary"></div>
+      <div class="results-controls">
+        <div class="sort-control">
+          <span class="sort-label">排序：</span>
+          <select id="sortSelect" class="sort-select">
+            <option value="price_asc">价格从低到高</option>
+            <option value="price_desc">价格从高到低</option>
+            <option value="transit_asc">时效最快</option>
+            <option value="valid_desc">有效期最长</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="loading-state" id="loadingState">
+      <div class="loading-ships">
+        <div class="ship ship-1">🚢</div>
+        <div class="ship ship-2">🚢</div>
+        <div class="ship ship-3">🚢</div>
+      </div>
+      <p class="loading-text">正在实时查询各船公司报价...</p>
+      <div class="loading-progress">
+        <div class="loading-bar" id="loadingBar"></div>
+      </div>
+    </div>
+
+    <div class="rates-list" id="ratesList"></div>
+
+    <div class="empty-state" id="emptyState" style="display:none">
+      <div class="empty-icon">🔍</div>
+      <h3>未找到匹配运价</h3>
+      <p>请尝试调整查询条件，或联系客服获取人工报价</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== 运价详情弹窗 ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="rateModal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-content" id="modalContent"></div>
+  </div>
+</div>
+
+<!-- ===== 页脚 ===== -->
+<footer class="footer">
+  <p>© 2026 FreightCalc · 数据由 Freightos 提供，仅供参考，实际价格以船公司确认为准</p>
+</footer>
+
+<script src="api-config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
